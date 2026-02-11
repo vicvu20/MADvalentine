@@ -96,6 +96,8 @@ class _ValentineHomeState extends State<ValentineHome>
             ],
           ),
           const SizedBox(height: 12),
+
+          // ✅ UPDATED: Stack overlay adds your heart_confetti.png
           Expanded(
             child: LayoutBuilder(
               builder: (context, constraints) {
@@ -116,12 +118,33 @@ class _ValentineHomeState extends State<ValentineHome>
                   child: AnimatedBuilder(
                     animation: _sparkleController,
                     builder: (context, _) {
-                      return CustomPaint(
-                        size: size,
-                        painter: ValentineCanvasPainter(
-                          stamps: stamps,
-                          sparkleT: _sparkleController.value,
-                        ),
+                      return Stack(
+                        children: [
+                          // Drawing layer
+                          Positioned.fill(
+                            child: CustomPaint(
+                              size: size,
+                              painter: ValentineCanvasPainter(
+                                stamps: stamps,
+                                sparkleT: _sparkleController.value,
+                              ),
+                            ),
+                          ),
+
+                          // Confetti image overlay (only for Party Heart)
+                          if (selectedEmoji == 'Party Heart')
+                            Positioned.fill(
+                              child: IgnorePointer(
+                                child: Opacity(
+                                  opacity: 0.35, // tweak 0.2 - 0.6
+                                  child: Image.asset(
+                                    'assets/images/heart_confetti.png',
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
                       );
                     },
                   ),
@@ -279,7 +302,8 @@ class ValentineCanvasPainter extends CustomPainter {
       ..close();
   }
 
-  void _drawFace(Canvas canvas, {required String type, required double heartSize}) {
+  void _drawFace(Canvas canvas,
+      {required String type, required double heartSize}) {
     final eyeWhite = Paint()..color = Colors.white;
     final pupil = Paint()..color = const Color(0xFF2B2B2B);
 
@@ -296,8 +320,10 @@ class ValentineCanvasPainter extends CustomPainter {
 
     // Blush
     final blush = Paint()..color = Colors.white.withOpacity(0.22);
-    canvas.drawCircle(Offset(-eyeX * 0.95, eyeY + heartSize * 0.25), heartSize * 0.10, blush);
-    canvas.drawCircle(Offset(eyeX * 0.95, eyeY + heartSize * 0.25), heartSize * 0.10, blush);
+    canvas.drawCircle(Offset(-eyeX * 0.95, eyeY + heartSize * 0.25),
+        heartSize * 0.10, blush);
+    canvas.drawCircle(Offset(eyeX * 0.95, eyeY + heartSize * 0.25),
+        heartSize * 0.10, blush);
 
     // Mouth
     final mouthPaint = Paint()
@@ -349,7 +375,8 @@ class ValentineCanvasPainter extends CustomPainter {
     canvas.drawCircle(Offset(0, -heartSize * 1.05), heartSize * 0.10, pom);
   }
 
-  void _drawConfetti(Canvas canvas, {required double heartSize, required int seed}) {
+  void _drawConfetti(Canvas canvas,
+      {required double heartSize, required int seed}) {
     final rnd = Random(seed);
 
     for (int i = 0; i < 18; i++) {
@@ -370,15 +397,18 @@ class ValentineCanvasPainter extends CustomPainter {
 
       // Mix lines + dots
       if (i % 3 == 0) {
-        canvas.drawCircle(p, 4 + rnd.nextDouble() * 3, paint..style = PaintingStyle.fill);
+        canvas.drawCircle(
+            p, 4 + rnd.nextDouble() * 3, paint..style = PaintingStyle.fill);
       } else {
-        final p2 = p + Offset(rnd.nextDouble() * 10 - 5, rnd.nextDouble() * 10 - 5);
+        final p2 =
+            p + Offset(rnd.nextDouble() * 10 - 5, rnd.nextDouble() * 10 - 5);
         canvas.drawLine(p, p2, paint);
       }
     }
   }
 
-  void _drawSparkles(Canvas canvas, {required double heartSize, required double t, required int seed}) {
+  void _drawSparkles(Canvas canvas,
+      {required double heartSize, required double t, required int seed}) {
     // twinkle using sine wave
     final rnd = Random(seed ^ 0x55AA55AA);
     final tw = (sin(t * 2 * pi) + 1) / 2; // 0..1
@@ -399,8 +429,11 @@ class ValentineCanvasPainter extends CustomPainter {
       canvas.drawLine(p + Offset(0, -len), p + Offset(0, len), sparklePaint);
 
       // Tiny dot accent
-      canvas.drawCircle(p + const Offset(2, -2), 1.8 + tw * 1.2,
-          Paint()..color = Colors.white.withOpacity(0.25 + tw * 0.45));
+      canvas.drawCircle(
+        p + const Offset(2, -2),
+        1.8 + tw * 1.2,
+        Paint()..color = Colors.white.withOpacity(0.25 + tw * 0.45),
+      );
     }
   }
 
